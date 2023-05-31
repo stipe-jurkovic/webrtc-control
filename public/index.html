@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Title</title>
+    <link rel="stylesheet" href="./style.css">
+    <!-- update the version number as needed -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+
+<body>
+    <div id="header">
+        <div class="header-element" id="left-side-of-header">
+            <h2>Završni Rad 2022./2023.g</h2>
+        </div>
+        <div class="header-element" id="right-side-of-header">
+            <h2>Stipe Jurković</h2>
+        </div>
+    </div>
+    <div id="content-wrapper">
+        <div id="top-section-wrapper">
+            <div id="video-box-wrapper">
+                <div id="video-feed-wrapper">
+                    <video class="video-streams" id="incoming-video-stream" autoplay playsinline></video>
+                    <div id="bottom-of-video-call-wrap">
+                            <div class="call-buttons" id="end-call-button">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 640 512"><!--! Font Awesome Pro 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+                                    <path
+                                        d="M228.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C76.1 30.2 64 46 64 64c0 107.4 37.8 206 100.8 283.1L9.2 469.1c-10.4 8.2-12.3 23.3-4.1 33.7s23.3 12.3 33.7 4.1l592-464c10.4-8.2 12.3-23.3 4.1-33.7s-23.3-12.3-33.7-4.1L253 278c-17.8-21.5-32.9-45.2-45-70.7L257.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96zm96.8 319l-91.3 72C310.7 476 407.1 512 512 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L368.7 368c-15-7.1-29.3-15.2-43-24.3z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="control-wrapper">
+                <div id="up-control" class="control-button"><button>up</button></div>
+                <div id="bottom-buttons">
+                    <div id="left-control" class="control-button"><button>left</button></div>
+                    <div id="down-control" class="control-button"><button>down</button></div>
+                    <div id="right-control" class="control-button"><button>right</button></div>
+                </div>
+            </div>
+        </div>
+        <div id="webRTC">
+            <div id="make-join-call">
+                <button id="make-call-button">Make call</button>
+                <button id="join-call-button">Join call</button>
+                <textarea id="room-name" name="" placeholder="Input room name" cols="12"
+                    rows="2"></textarea>
+            </div>
+            <div id="status-wrapper">
+                <div class="states">
+                    <h3 class="state">Peer connection state:&nbsp; </h3>
+                    <h3 class="state" id="pc-state">unset</h3>
+                </div>
+                <div class="states">
+                    <h3 class="state">Offer state:&nbsp; </h3>
+                    <h3 class="state" id="of-state">unset</h3>
+                </div>
+                <div class="states">
+                    <h3 class="state">Answer state:&nbsp; </h3>
+                    <h3 class="state" id="an-state">unset</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script defer src="./main.js"></script>
+
+</body>
+
+
+</html>
