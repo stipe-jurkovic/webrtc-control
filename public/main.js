@@ -180,7 +180,8 @@ function endCall() {
         makeCallButton.style.backgroundColor = "white";
         joinCallButton.style.backgroundColor = "white";
         peerConnection = null;
+        
         joinCallButton.disabled = false;
-        makeCallButton.disabled = false;
+        makeCallButton.disabled = false; 
     }
 }
