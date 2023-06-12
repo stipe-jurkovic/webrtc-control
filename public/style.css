@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 html,
 body{
     margin: 0;
@@ -135,4 +136,143 @@ body{
     #top-section-wrapper{
         flex-direction: column;
     }
+=======
+html,
+body{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+body{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+#header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid gray;
+    height: 7vh;
+    width: 100%;
+    background-color: aliceblue;
+}
+.header-element{
+    margin: 0 1em;
+}
+#content-wrapper{
+    width: 80vw;
+}
+
+
+
+#top-section-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+#control-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+#bottom-buttons{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.control-button button{
+    width: 5rem;
+    height: 5rem;
+}
+
+#video-box-wrapper{
+    border: 1px solid black;
+}
+#video-feed-wrapper{
+    position: relative;
+}
+.video-streams{
+    display: block;
+}
+#incoming-video-stream{
+    background-color: black;
+    width: 80vw;
+    /*height: 480px;
+    width: 640px;*/
+}
+#outgoing-video-stream{
+    width: 100%;
+    transform: rotateY(180deg);
+}
+#outgoing-stream-wrap{
+    translate: -8% -12%;
+    grid-column-start: 3;
+    grid-column-end: 4;
+}
+
+.call-buttons{
+    width: 2rem;
+    height: 2rem;
+    padding: 1em;
+    margin: 0.5rem;
+    cursor: pointer;
+    background-color: azure;
+    border-radius: 50%;
+}
+.call-buttons svg{
+    height: 100%;
+    width: 100%;
+    margin: auto;
+}
+#button-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    z-index: 1;
+}
+#bottom-of-video-call-wrap{
+    margin: 0 -2.5rem;
+    left: 50%;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+}
+
+
+/* WebRTC dio*************************************************/
+
+#make-join-call{
+    background-color: aqua;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    visibility: unset;
+}
+#generate-offer-input, #generate-answer-input{
+    width: 90%;
+    height: 3rem;  
+}
+#status-wrapper{
+    display: flex;
+    flex-direction: column;
+}
+.states{
+    display: flex;
+}
+.state{
+    margin: 0.2rem;
+}
+
+@media screen and (max-width: 600px) {
+    #top-section-wrapper{
+        flex-direction: column;
+    }
+>>>>>>> 31538734e9dbc426ac324581117c1015ce2d7c47
 }
