@@ -9,29 +9,28 @@ let incomingStream = new MediaStream();
 let arrows = document;
 let endCallButton = document.getElementById('end-call-button');
 let makeCallButton = document.getElementById('make-call-button');
-let joinCallButton = document.getElementById('join-call-button');
 let roomNameTextBox = document.getElementById('make-join-call').getElementsByTagName('textarea')[0];
 let pcState = document.getElementById("pc-state");
 let ofState = document.getElementById("of-state");
 let anState = document.getElementById("an-state");
 
 
-arrows.getElementById("up-control").addEventListener("click", ()=>{
-    dataChannel.send("up-control","test");
+arrows.getElementById("up-control").addEventListener("click", () => {
+    dataChannel.send("up-control", "test");
 })
-arrows.getElementById("left-control").addEventListener("click", ()=>{
-    dataChannel.send("left-control","test");
+arrows.getElementById("left-control").addEventListener("click", () => {
+    dataChannel.send("left-control", "test");
 })
-arrows.getElementById("down-control").addEventListener("click", ()=>{
-    dataChannel.send("down-control","test");
+arrows.getElementById("down-control").addEventListener("click", () => {
+    dataChannel.send("down-control", "test");
 })
-arrows.getElementById("right-control").addEventListener("click", ()=>{
-    dataChannel.send("right-control","test");
+arrows.getElementById("right-control").addEventListener("click", () => {
+    dataChannel.send("right-control", "test");
 })
 document.addEventListener('keydown', (event) => {
     var keyPressed = event.key;
     var code = event;
-    dataChannel.send(keyPressed,"test");
+    dataChannel.send(keyPressed, "message");
     switch (keyPressed) {
         case 'ArrowUp':
             console.log(event.key);
@@ -47,24 +46,15 @@ document.addEventListener('keydown', (event) => {
             break;
     }
 });
-endCallButton.addEventListener('click', () => { 
-    endCall()});
+endCallButton.addEventListener('click', () => {
+    endCall()
+});
 makeCallButton.addEventListener('click', () => {
     init();
     roomName = roomNameTextBox.value;
-    joinCall();
+    makeCall();
     console.log("room name", roomName);
     makeCallButton.style.backgroundColor = "red";
-    joinCallButton.disabled = true;
-
-});
-joinCallButton.addEventListener('click', () => {
-    init();
-    roomName = roomNameTextBox.value;
-    joinCall();
-    console.log("room name", roomName);
-    joinCallButton.style.backgroundColor = "green";
-    makeCallButton.disabled = true;
 
 });
 
@@ -101,87 +91,87 @@ let openMediaDevices = async (constraints) => {
 
 function init() {
     peerConnection = new RTCPeerConnection(configuration);
-    peerConnection.addEventListener("connectionstatechange", (state)=>{
+    peerConnection.addEventListener("connectionstatechange", (state) => {
         pcState.innerHTML = state.target.connectionState;
-        console.log("connectionState: ",state.target.connectionState);
+        console.log("connectionState: ", state.target.connectionState);
     }
     )
 }
 
 
-async function joinCall() {
-    var offer;
-    
-    
-    peerConnection.addEventListener("datachannel", event =>{
-        dataChannel = event.channel;
-        console.log(dataChannel);
-        dataChannel.addEventListener("open", (event)=> {
-        console.log("Success");
-    })
-    });
-    calleeCandidates = db.collection(roomName).doc("iceCandidates").collection("calleeCandidates");
-    await db.collection(roomName).doc("offer").get().then((doc) => {
-        offer = new RTCSessionDescription(doc.data());
-        ofState.innerHTML = "recieved and added, deleted from base";
-        if (!offer.type) { return; }
-        db.collection(roomName).doc("offer").delete().then(() => {
-            console.log("Offer deleted from db", offer)
-        }).catch((error) => {
-            console.error("Offer not deleted from base: ", error);
-        });
-    });
-    if (!offer.type) { endCall(); return; }
-
-    peerConnection.setRemoteDescription(offer);
-
-    peerConnection.ontrack = function (event) {
-        console.log('Received new incoming stream');
-        incomingStream = event.streams[0];
-        console.log(document.getElementById('incoming-video-stream').srcObject = incomingStream);
-    };
+async function makeCall() {
+    let answer;
+    peerConnection.addTransceiver('video', { direction: 'recvonly' });
     peerConnection.onicecandidate = async (event) => {
-        //Event that fires off when a new answer ICE candidate is created
         if (event.candidate) {
-            console.log('Adding answer candidate...:', event.candidate);
-            calleeCandidates.add(event.candidate.toJSON());
-            peerConnection.addIceCandidate(
-                new RTCIceCandidate(event.candidate))
+            console.log('Adding offer candidate...:', event.candidate);
+            //callerCandidates.add(event.candidate.toJSON());
         }
         if (event.candidate == null) {
             console.log('Last candidate added');
         }
     };
+    dataChannel = peerConnection.createDataChannel("Robot control");
+    dataChannel.addEventListener("message", (ev)=>{
+        console.log(ev.data);
+        if (ev.data=="Reconnect46855"){
+            endCall();
+            init();
+            roomName = roomNameTextBox.value;
+            makeCall();
+            console.log("room name", roomName);
+            makeCallButton.style.backgroundColor = "red";
+            return;
+        }
+    })
+    peerConnection.ontrack = function (event) {
+        console.log('Received new incoming stream');
+        incomingStream = event.streams[0];
+        console.log(document.getElementById('incoming-video-stream').srcObject = incomingStream);
+    };
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    console.log('Created offer:', offer);
+    ofState.innerHTML = "created";
+    setTimeout(() => {
+        db.collection(roomName).doc("offer").set({
+            type: peerConnection.localDescription.type,
+            sdp: peerConnection.localDescription.sdp
+        });
+        console.log('Answer in db(timeout):', peerConnection.localDescription);
+        console.log('Offer in db:', offer);
+        ofState.innerHTML = "created and in db";
+    }, 2500);
+    db.collection(roomName).doc("answer").onSnapshot((doc) => {
+        if (doc.data()) {
+            answer = new RTCSessionDescription(doc.data());
+            anState.innerHTML = "recieved and added, deleted from db";
+            db.collection(roomName).doc("answer").delete().then(() => { console.log("Answer deleted from db") }).catch((error) => {
+                console.error("Answer not deleted from base: ", error);
+            });
+            peerConnection.setRemoteDescription(answer);
+        }
+
+    });
+
+
+
     peerConnection.onicegatheringstatechange = async (event) => {
         console.log(peerConnection.iceGatheringState);
         console.log(event)
         console.log("ICE gathering is over")
     };
-    const answer = await peerConnection.createAnswer();
-    console.log('Created answer:', answer);
-    anState.innerHTML = "created and in db"
-    await peerConnection.setLocalDescription(answer);
-    setTimeout(() => {
-        db.collection(roomName).doc("answer").set({
-            type: peerConnection.localDescription.type,
-            sdp: peerConnection.localDescription.sdp
-        });
-        console.log('Answer in db(timeout):', answer);
-    }, 2500);
 }
 function endCall() {
-    if (peerConnection!="closed") {
-        console.log(dataChannel.readyState == "open", dataChannel.readyState)
-        if (dataChannel.readyState == "open"){
-        dataChannel.send("endcall123455", "test");
+    if (peerConnection != "closed") {
+        if (dataChannel && dataChannel.readyState == "open") {
+            dataChannel.send("endcall123455", "test");
         }
         peerConnection.close();
         pcState.innerHTML = peerConnection.connectionState;
+        ofState.innerHTML = "unset";
+        anState.innerHTML = "unset";
         makeCallButton.style.backgroundColor = "white";
-        joinCallButton.style.backgroundColor = "white";
         peerConnection = null;
-        
-        joinCallButton.disabled = false;
-        makeCallButton.disabled = false; 
     }
 }
