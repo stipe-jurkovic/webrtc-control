@@ -13,23 +13,24 @@ let roomNameTextBox = document.getElementById('make-join-call').getElementsByTag
 let pcState = document.getElementById("pc-state");
 let ofState = document.getElementById("of-state");
 let anState = document.getElementById("an-state");
+let localState = document.getElementById("local-state");
+let remoteState = document.getElementById("remote-state");
 
 
-arrows.getElementById("up-control").addEventListener("click", ()=>{
+arrows.getElementById("up-control").addEventListener("click", () => {
     dataChannel.send("control-up");
 })
-arrows.getElementById("down-control").addEventListener("click", ()=>{
+arrows.getElementById("down-control").addEventListener("click", () => {
     dataChannel.send("control-down");
 })
-arrows.getElementById("left-control").addEventListener("click", ()=>{
+arrows.getElementById("left-control").addEventListener("click", () => {
     dataChannel.send("control-left");
 })
-arrows.getElementById("right-control").addEventListener("click", ()=>{
+arrows.getElementById("right-control").addEventListener("click", () => {
     dataChannel.send("control-right");
 })
 document.addEventListener('keydown', (event) => {
     var keyPressed = event.key;
-    var code = event;
     dataChannel.send(keyPressed, "message");
     switch (keyPressed) {
         case 'ArrowUp':
@@ -47,6 +48,25 @@ document.addEventListener('keydown', (event) => {
         case 'ArrowRight':
             console.log(event.key);
             dataChannel.send("control-right");
+            peerConnection.getStats().then((report) => {
+                report.forEach(
+                    (stats) => {
+                        if (stats.type === 'local-candidate') {
+                            console.log('Stat ID:', stats.id);
+                            console.log('Type:', stats.type);
+                            console.log('State:', stats.state);
+                            console.log('Timestamp:', stats.timestamp);
+                            console.log('Candidate Type:', stats.candidateType);
+                            console.log('Protocol:', stats.protocol);
+                            console.log('Address:', stats.address);
+                            console.log('Port:', stats.port);
+                            console.log('Transport:', stats.transport);
+                            console.log("Selected:", stats.selected);
+                            console.log('----------------------------------');
+                        }
+                    }
+                );
+            });
             break;
     }
 });
@@ -98,6 +118,27 @@ function init() {
     peerConnection.addEventListener("connectionstatechange", (state) => {
         pcState.innerHTML = state.target.connectionState;
         console.log("connectionState: ", state.target.connectionState);
+        if (state.target.connectionState == "connected") {
+            console.log(peerConnection.getStats().type);
+            peerConnection.getStats().then((report) => {
+                report.forEach(
+                    (stats) => {
+                        if (stats.type === 'local-candidate') {
+                            console.log('Stat ID:', stats.id);
+                            console.log('Type:', stats.type);
+                            console.log('State:', stats.state);
+                            console.log('Timestamp:', stats.timestamp);
+                            console.log('Candidate Type:', stats.candidateType);
+                            console.log('Protocol:', stats.protocol);
+                            console.log('Address:', stats.address);
+                            console.log('Port:', stats.port);
+                            console.log('Transport:', stats.transport);
+                            console.log('----------------------------------');
+                        }
+                    }
+                );
+            });
+        }
     }
     )
 }
@@ -116,9 +157,9 @@ async function makeCall() {
         }
     };
     dataChannel = peerConnection.createDataChannel("Robot control");
-    dataChannel.addEventListener("message", (ev)=>{
+    dataChannel.addEventListener("message", (ev) => {
         console.log(ev.data);
-        if (ev.data=="Reconnect46855"){
+        if (ev.data == "Reconnect46855") {
             endCall();
             init();
             roomName = roomNameTextBox.value;
@@ -159,6 +200,15 @@ async function makeCall() {
     });
 
 
+    
+    let iceTransport = peerConnection.getReceivers()[0].transport.iceTransport;
+    iceTransport.addEventListener("selectedcandidatepairchange", (event)=>{
+        console.log(iceTransport);
+        console.log("old: ",iceTransport.getSelectedCandidatePair());
+        console.log("new: ",event.target.getSelectedCandidatePair());
+        localState.innerHTML = event.target.getSelectedCandidatePair().local.type;
+        remoteState.innerHTML = event.target.getSelectedCandidatePair().remote.type;
+    })
 
     peerConnection.onicegatheringstatechange = async (event) => {
         console.log(peerConnection.iceGatheringState);

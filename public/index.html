@@ -48,7 +48,7 @@
         </div>
         <div id="webRTC">
             <div id="make-join-call">
-                <button id="make-call-button">Make call</button>
+                <button id="make-call-button">Connect</button>
                 <textarea id="room-name" name="" placeholder="Input room name" cols="12"
                     rows="2"></textarea>
             </div>
@@ -64,6 +64,14 @@
                 <div class="states">
                     <h3 class="state">Answer state:&nbsp; </h3>
                     <h3 class="state" id="an-state">unset</h3>
+                </div>
+                <div class="states">
+                    <h3 class="state">Local selected candidate:&nbsp; </h3>
+                    <h3 class="state" id="local-state">unset</h3>
+                </div>
+                <div class="states">
+                    <h3 class="state">Remote  selected candidate:&nbsp; </h3>
+                    <h3 class="state" id="remote-state">unset</h3>
                 </div>
             </div>
         </div>
