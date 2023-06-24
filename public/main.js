@@ -15,17 +15,17 @@ let ofState = document.getElementById("of-state");
 let anState = document.getElementById("an-state");
 
 
-arrows.getElementById("up-control").addEventListener("click", () => {
-    dataChannel.send("up-control", "test");
+arrows.getElementById("up-control").addEventListener("click", ()=>{
+    dataChannel.send("control-up");
 })
-arrows.getElementById("left-control").addEventListener("click", () => {
-    dataChannel.send("left-control", "test");
+arrows.getElementById("down-control").addEventListener("click", ()=>{
+    dataChannel.send("control-down");
 })
-arrows.getElementById("down-control").addEventListener("click", () => {
-    dataChannel.send("down-control", "test");
+arrows.getElementById("left-control").addEventListener("click", ()=>{
+    dataChannel.send("control-left");
 })
-arrows.getElementById("right-control").addEventListener("click", () => {
-    dataChannel.send("right-control", "test");
+arrows.getElementById("right-control").addEventListener("click", ()=>{
+    dataChannel.send("control-right");
 })
 document.addEventListener('keydown', (event) => {
     var keyPressed = event.key;
@@ -34,15 +34,19 @@ document.addEventListener('keydown', (event) => {
     switch (keyPressed) {
         case 'ArrowUp':
             console.log(event.key);
+            dataChannel.send("control-up");
             break;
         case 'ArrowDown':
             console.log(event.key);
+            dataChannel.send("control-down");
             break;
         case 'ArrowLeft':
             console.log(event.key);
+            dataChannel.send("control-left");
             break;
         case 'ArrowRight':
             console.log(event.key);
+            dataChannel.send("control-right");
             break;
     }
 });
