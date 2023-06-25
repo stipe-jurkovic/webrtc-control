@@ -1,4 +1,3 @@
-
 let videoStream;
 let roomName;
 let peerConnection, calleeCandidates, db, audiosender, videosender, icestate, dataChannel;
@@ -18,56 +17,59 @@ let remoteState = document.getElementById("remote-state");
 
 
 arrows.getElementById("up-control").addEventListener("click", () => {
-    dataChannel.send("control-up");
+    if (dataChannel) { dataChannel.send("control-up"); }
 })
 arrows.getElementById("down-control").addEventListener("click", () => {
-    dataChannel.send("control-down");
+    if (dataChannel) { dataChannel.send("control-down"); }
 })
 arrows.getElementById("left-control").addEventListener("click", () => {
-    dataChannel.send("control-left");
+    if (dataChannel) { dataChannel.send("control-left"); }
 })
 arrows.getElementById("right-control").addEventListener("click", () => {
-    dataChannel.send("control-right");
+    if (dataChannel) { dataChannel.send("control-right"); }
 })
 document.addEventListener('keydown', (event) => {
     var keyPressed = event.key;
-    dataChannel.send(keyPressed, "message");
-    switch (keyPressed) {
-        case 'ArrowUp':
-            console.log(event.key);
-            dataChannel.send("control-up");
-            break;
-        case 'ArrowDown':
-            console.log(event.key);
-            dataChannel.send("control-down");
-            break;
-        case 'ArrowLeft':
-            console.log(event.key);
-            dataChannel.send("control-left");
-            break;
-        case 'ArrowRight':
-            console.log(event.key);
-            dataChannel.send("control-right");
-            peerConnection.getStats().then((report) => {
-                report.forEach(
-                    (stats) => {
-                        if (stats.type === 'local-candidate') {
-                            console.log('Stat ID:', stats.id);
-                            console.log('Type:', stats.type);
-                            console.log('State:', stats.state);
-                            console.log('Timestamp:', stats.timestamp);
-                            console.log('Candidate Type:', stats.candidateType);
-                            console.log('Protocol:', stats.protocol);
-                            console.log('Address:', stats.address);
-                            console.log('Port:', stats.port);
-                            console.log('Transport:', stats.transport);
-                            console.log("Selected:", stats.selected);
-                            console.log('----------------------------------');
+    console.log(keyPressed);
+    if (dataChannel) {
+        dataChannel.send(keyPressed, "message");
+        switch (keyPressed) {
+            case 'ArrowUp':
+                console.log(event.key);
+                dataChannel.send("control-up");
+                break;
+            case 'ArrowDown':
+                console.log(event.key);
+                dataChannel.send("control-down");
+                break;
+            case 'ArrowLeft':
+                console.log(event.key);
+                dataChannel.send("control-left");
+                break;
+            case 'ArrowRight':
+                console.log(event.key);
+                dataChannel.send("control-right");
+                /*peerConnection.getStats().then((report) => {
+                    report.forEach(
+                        (stats) => {
+                            if (stats.type === 'local-candidate') {
+                                console.log('Stat ID:', stats.id);
+                                console.log('Type:', stats.type);
+                                console.log('State:', stats.state);
+                                console.log('Timestamp:', stats.timestamp);
+                                console.log('Candidate Type:', stats.candidateType);
+                                console.log('Protocol:', stats.protocol);
+                                console.log('Address:', stats.address);
+                                console.log('Port:', stats.port);
+                                console.log('Transport:', stats.transport);
+                                console.log("Selected:", stats.selected);
+                                console.log('----------------------------------');
+                            }
                         }
-                    }
-                );
-            });
-            break;
+                    );
+                });*/
+                break;
+        }
     }
 });
 endCallButton.addEventListener('click', () => {
@@ -141,6 +143,43 @@ function init() {
         }
     }
     )
+    window.addEventListener("gamepadconnected", (e) => {
+        var gp = navigator.getGamepads()[e.gamepad.index]
+        console.log(
+            "Gamepad connected at index %d: %s. %d buttons, %d axes.",
+            e.gamepad.index,
+            e.gamepad.id,
+            e.gamepad.buttons.length,
+            e.gamepad.axes.length
+        );
+        setInterval(() => {
+            var gp = navigator.getGamepads()[e.gamepad.index]
+            isPressed = gp.buttons[0].pressed;
+            gp.buttons.forEach((k, index)=>{
+                if (k.pressed){
+                console.log(
+                    "Gamepad connected at index %d: Button %d was pressed down.",
+                    e.gamepad.index,
+                    index
+                );
+                if (dataChannel) {
+                    switch (index) {
+                        case 12:
+                            dataChannel.send("control-up");
+                            break;
+                        case 13:
+                            dataChannel.send("control-down");
+                            break;
+                        case 14:
+                            dataChannel.send("control-left");
+                            break;
+                        case 15:
+                            dataChannel.send("control-right");
+                            break;
+                    }
+                }}
+            })}, 100);
+    });
 }
 
 
@@ -200,12 +239,12 @@ async function makeCall() {
     });
 
 
-    
+
     let iceTransport = peerConnection.getReceivers()[0].transport.iceTransport;
-    iceTransport.addEventListener("selectedcandidatepairchange", (event)=>{
+    iceTransport.addEventListener("selectedcandidatepairchange", (event) => {
         console.log(iceTransport);
-        console.log("old: ",iceTransport.getSelectedCandidatePair());
-        console.log("new: ",event.target.getSelectedCandidatePair());
+        console.log("old: ", iceTransport.getSelectedCandidatePair());
+        console.log("new: ", event.target.getSelectedCandidatePair());
         localState.innerHTML = event.target.getSelectedCandidatePair().local.type;
         remoteState.innerHTML = event.target.getSelectedCandidatePair().remote.type;
     })
