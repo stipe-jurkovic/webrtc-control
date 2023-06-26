@@ -52,8 +52,15 @@ body{
 
 
 .control-button button{
-    width: 5rem;
-    height: 5rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 5px;
+    border: 2px solid white;
+    background-color: rgb(0, 0, 0);
+    color: white;
+    padding: 4px;
+    margin: 5px;
+    cursor: pointer;
 }
 
 #video-box-wrapper{
@@ -106,20 +113,38 @@ body{
 
 /* WebRTC dio*************************************************/
 
-#make-join-call{
-    background-color: aqua;
+#webRTC{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+#connect{
+    margin: 10%;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 2px solid white;
     display: flex;
     align-items: center;
     justify-content: start;
-    visibility: unset;
+    flex-direction: column;
+    width: fit-content;
 }
-#generate-offer-input, #generate-answer-input{
-    width: 90%;
-    height: 3rem;  
+#connect-button{
+    margin: 0.15rem;
+}
+.inputs{
+    height: 1.5rem;
+    width: 10rem;
+    border-radius: 5px;
+    padding: 0.1rem 0.2rem;
+    margin: 0.15rem;
+    text-align: center;
 }
 #status-wrapper{
     display: flex;
     flex-direction: column;
+    margin: 1rem;
 }
 .states{
     display: flex;

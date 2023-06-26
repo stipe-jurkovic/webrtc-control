@@ -1,14 +1,11 @@
-let videoStream;
 let roomName;
-let peerConnection, calleeCandidates, db, audiosender, videosender, icestate, dataChannel;
+let peerConnection, db, dataChannel;
 let stream;
-let audiotrack, videotrack;
-let caller;
 let incomingStream = new MediaStream();
-let arrows = document;
 let endCallButton = document.getElementById('end-call-button');
-let makeCallButton = document.getElementById('make-call-button');
-let roomNameTextBox = document.getElementById('make-join-call').getElementsByTagName('textarea')[0];
+let connectButtton = document.getElementById('connect-button');
+let robotNameTextBox = document.getElementById('robot-name');
+
 let pcState = document.getElementById("pc-state");
 let ofState = document.getElementById("of-state");
 let anState = document.getElementById("an-state");
@@ -16,16 +13,16 @@ let localState = document.getElementById("local-state");
 let remoteState = document.getElementById("remote-state");
 
 
-arrows.getElementById("up-control").addEventListener("click", () => {
+document.getElementById("up-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-up"); }
 })
-arrows.getElementById("down-control").addEventListener("click", () => {
+document.getElementById("down-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-down"); }
 })
-arrows.getElementById("left-control").addEventListener("click", () => {
+document.getElementById("left-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-left"); }
 })
-arrows.getElementById("right-control").addEventListener("click", () => {
+document.getElementById("right-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-right"); }
 })
 document.addEventListener('keydown', (event) => {
@@ -56,13 +53,13 @@ document.addEventListener('keydown', (event) => {
 endCallButton.addEventListener('click', () => {
     endCall()
 });
-makeCallButton.addEventListener('click', () => {
-    if (roomNameTextBox.value !=''){    
+connectButtton.addEventListener('click', () => {
+    if (robotNameTextBox.value !=''){    
         init();
-        roomName = roomNameTextBox.value;
+        roomName = robotNameTextBox.value;
         makeCall();
         console.log("room name", roomName);
-        makeCallButton.style.backgroundColor = "red";
+        connectButtton.style.backgroundColor = "red";
     }
 
 });
@@ -92,12 +89,6 @@ const configuration = {
     ]
 };
 
-
-let openMediaDevices = async (constraints) => {
-    videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-    return videoStream;
-}
-
 function init() {
     peerConnection = new RTCPeerConnection(configuration);
     peerConnection.addEventListener("connectionstatechange", (state) => {
@@ -114,6 +105,37 @@ function init() {
         {
             var gp = navigator.getGamepads()[e.gamepad.index]
             isPressed = gp.buttons[0].pressed;
+            gp.axes.forEach((k, index)=>
+            {
+                if ((k.toFixed(2)>0.2 || k.toFixed(2)<-0.2) && (index == 2|| index==3))
+                {
+                    console.log(
+                        "Gamepad connected at index %d: Button %d was pressed down.",
+                        e.gamepad.index,
+                        index
+                    );
+                    console.log("Value with Fixed Number of Decimal Places:", k.toFixed(2));//aaaaaaaaa
+                    console.log("Value with Precision:", k.toPrecision(3));
+                    if (true){
+                        let joyconX;
+                        let joyconZ;
+                        if(gp.axes[2].toFixed(2)>0){
+                            joyconX = "joyX+" + gp.axes[2].toFixed(2);
+                        }else{
+                            joyconX = "joyX" + gp.axes[2].toFixed(2);
+                        }
+                        console.log(joyconX);
+                        if(gp.axes[3].toFixed(2)>0){
+                            joyconZ = "joyZ+" + gp.axes[3].toFixed(2) + joyconX;
+                        }else{
+                            joyconZ = "joyZ" + gp.axes[3].toFixed(2) + joyconX;
+                        }
+                        console.log(joyconZ);
+                        dataChannel.send(joyconZ);
+                    }
+                } 
+            })
+
             gp.buttons.forEach((k, index) => 
             {
                 if (k.pressed) 
@@ -164,10 +186,10 @@ async function makeCall() {
         if (ev.data == "Reconnect46855") {
             endCall();
             init();
-            roomName = roomNameTextBox.value;
+            robotName = robotNameTextBox.value;
             makeCall();
-            console.log("room name", roomName);
-            makeCallButton.style.backgroundColor = "red";
+            console.log("robot name", robotName);
+            connectButtton.style.backgroundColor = "red";
             return;
         }
     })
@@ -234,7 +256,7 @@ function endCall() {
         pcState.innerHTML = "none";
         localState.innerHTML = "none";
         remoteState.innerHTML = "none";
-        makeCallButton.style.backgroundColor = "white";
+        connectButtton.style.backgroundColor = "white";
         peerConnection = null;
     }
 }
