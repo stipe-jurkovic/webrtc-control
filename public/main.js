@@ -54,12 +54,17 @@ endCallButton.addEventListener('click', () => {
     endCall()
 });
 connectButtton.addEventListener('click', () => {
-    if (robotNameTextBox.value !=''){    
+    if (!peerConnection || peerConnection.connectionState!="connected")
+    {
+        resetInfo();
+    if (robotNameTextBox.value !='')
+    {    
         init();
         roomName = robotNameTextBox.value;
         makeCall();
         console.log("room name", roomName);
         connectButtton.style.backgroundColor = "red";
+    }
     }
 
 });
@@ -94,6 +99,9 @@ function init() {
     peerConnection.addEventListener("connectionstatechange", (state) => {
         pcState.innerHTML = state.target.connectionState;
         console.log("connectionState: ", state.target.connectionState);
+        if (state.target.connectionState=="connected"){
+            connectButtton.style.backgroundColor = "green";
+        }
     });
     window.addEventListener("gamepadconnected", (e) => {
         var gp = navigator.getGamepads()[e.gamepad.index]
@@ -119,13 +127,13 @@ function init() {
                     if (true){
                         let joyconX;
                         let joyconZ;
-                        if(gp.axes[2].toFixed(2)>0){
+                        if(gp.axes[2].toFixed(2)>=0){
                             joyconX = "joyX+" + gp.axes[2].toFixed(2);
                         }else{
                             joyconX = "joyX" + gp.axes[2].toFixed(2);
                         }
                         console.log(joyconX);
-                        if(gp.axes[3].toFixed(2)>0){
+                        if(gp.axes[3].toFixed(2)>=0){
                             joyconZ = "joyZ+" + gp.axes[3].toFixed(2) + joyconX;
                         }else{
                             joyconZ = "joyZ" + gp.axes[3].toFixed(2) + joyconX;
@@ -244,6 +252,15 @@ async function makeCall() {
         console.log("ICE gathering is over")
     };
 }
+function resetInfo(){
+    ofState.innerHTML = "none";
+    anState.innerHTML = "none";
+    pcState.innerHTML = "none";
+    localState.innerHTML = "none";
+    remoteState.innerHTML = "none";
+    connectButtton.style.backgroundColor = "white";
+    peerConnection = null;
+}
 function endCall() {
     if (peerConnection != "closed") {
         if (dataChannel && dataChannel.readyState == "open") {
@@ -251,12 +268,6 @@ function endCall() {
         }
         peerConnection.close();
         pcState.innerHTML = peerConnection.connectionState;
-        ofState.innerHTML = "none";
-        anState.innerHTML = "none";
-        pcState.innerHTML = "none";
-        localState.innerHTML = "none";
-        remoteState.innerHTML = "none";
-        connectButtton.style.backgroundColor = "white";
-        peerConnection = null;
+        resetInfo();
     }
 }
