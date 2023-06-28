@@ -1,5 +1,5 @@
 let roomName;
-let peerConnection, db, dataChannel;
+let peerConnection, db, dataChannel, unsubscribe;
 let stream;
 let incomingStream = new MediaStream();
 let endCallButton = document.getElementById('end-call-button');
@@ -101,6 +101,7 @@ function init() {
         console.log("connectionState: ", state.target.connectionState);
         if (state.target.connectionState=="connected"){
             connectButtton.style.backgroundColor = "green";
+            unsubscribe();
         }
     });
     window.addEventListener("gamepadconnected", (e) => {
@@ -220,7 +221,7 @@ async function makeCall() {
         console.log('Offer in db(timeout):', peerConnection.localDescription);
         ofState.innerHTML = "Created and in Database";
     }, 2500);
-    db.collection(roomName).doc("answer").onSnapshot((doc) => {
+    unsubscribe = db.collection(roomName).doc("answer").onSnapshot((doc) => {
         if (doc.data()) {
             answer = new RTCSessionDescription(doc.data());
             anState.innerHTML = "recieved and added, deleted from db";
@@ -234,8 +235,6 @@ async function makeCall() {
         }
 
     });
-
-
 
     let iceTransport = peerConnection.getReceivers()[0].transport.iceTransport;
     iceTransport.addEventListener("selectedcandidatepairchange", (event) => {
