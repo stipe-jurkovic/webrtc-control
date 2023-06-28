@@ -116,6 +116,10 @@ function init() {
             isPressed = gp.buttons[0].pressed;
             gp.axes.forEach((k, index)=>
             {
+
+                
+
+
                 if ((k.toFixed(2)>0.2 || k.toFixed(2)<-0.2) && (index == 2|| index==3))
                 {
                     console.log(
@@ -125,7 +129,7 @@ function init() {
                     );
                     console.log("Value with Fixed Number of Decimal Places:", k.toFixed(2));//aaaaaaaaa
                     console.log("Value with Precision:", k.toPrecision(3));
-                    if (true){
+                    if (gp.axes[2].toFixed(2)<=-0.2 || gp.axes[3].toFixed(2)<=-0.2 || gp.axes[2].toFixed(2)>=0.2 || gp.axes[3].toFixed(2)>=0.2){
                         let joyconX;
                         let joyconZ;
                         if(gp.axes[2].toFixed(2)>=0){
@@ -133,14 +137,17 @@ function init() {
                         }else{
                             joyconX = "joyX" + gp.axes[2].toFixed(2);
                         }
-                        console.log(joyconX);
                         if(gp.axes[3].toFixed(2)>=0){
                             joyconZ = "joyZ+" + gp.axes[3].toFixed(2) + joyconX;
                         }else{
                             joyconZ = "joyZ" + gp.axes[3].toFixed(2) + joyconX;
                         }
+                        console.log(joyconX);
                         console.log(joyconZ);
                         dataChannel.send(joyconZ);
+                    }
+                    else{
+                        dataChannel.send("joyz+0.0joyX+0.0");
                     }
                 } 
             })
@@ -157,6 +164,9 @@ function init() {
                     if (dataChannel) {
                         switch (index) 
                         {
+                            case 0:
+                                dataChannel.send("control-stop")
+                                break;
                             case 12:
                                 dataChannel.send("control-up");
                                 break;
