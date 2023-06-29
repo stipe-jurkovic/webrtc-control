@@ -1,10 +1,11 @@
-let roomName;
+let robotName;
 let peerConnection, db, dataChannel, unsubscribe;
 let stream;
 let incomingStream = new MediaStream();
 let endCallButton = document.getElementById('end-call-button');
 let connectButtton = document.getElementById('connect-button');
 let robotNameTextBox = document.getElementById('robot-name');
+let robotPasswordTextBox = document.getElementById('robot-password');
 
 let pcState = document.getElementById("pc-state");
 let ofState = document.getElementById("of-state");
@@ -18,6 +19,9 @@ document.getElementById("up-control").addEventListener("click", () => {
 })
 document.getElementById("down-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-down"); }
+})
+document.getElementById("stop-control").addEventListener("click", () => {
+    if (dataChannel) { dataChannel.send("control-stop"); }
 })
 document.getElementById("left-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-left"); }
@@ -54,17 +58,15 @@ endCallButton.addEventListener('click', () => {
     endCall()
 });
 connectButtton.addEventListener('click', () => {
-    if (!peerConnection || peerConnection.connectionState!="connected")
-    {
+    if (!peerConnection || peerConnection.connectionState != "connected") {
         resetInfo();
-    if (robotNameTextBox.value !='')
-    {    
-        init();
-        roomName = robotNameTextBox.value;
-        makeCall();
-        console.log("room name", roomName);
-        connectButtton.style.backgroundColor = "red";
-    }
+        if (robotNameTextBox.value != '' && robotPasswordTextBox.value != '') {
+            init();
+            robotName = robotNameTextBox.value;
+            makeCall();
+            console.log("room name", robotName);
+            connectButtton.style.backgroundColor = "red";
+        }
     }
 
 });
@@ -99,71 +101,60 @@ function init() {
     peerConnection.addEventListener("connectionstatechange", (state) => {
         pcState.innerHTML = state.target.connectionState;
         console.log("connectionState: ", state.target.connectionState);
-        if (state.target.connectionState=="connected"){
+        if (state.target.connectionState == "connected") {
             connectButtton.style.backgroundColor = "green";
             unsubscribe();
         }
     });
     window.addEventListener("gamepadconnected", (e) => {
-        var gp = navigator.getGamepads()[e.gamepad.index]
+        navigator.getGamepads()[e.gamepad.index]
+        let i = 0, j = 0;
         console.log(
             "Gamepad connected at index %d: %s. %d buttons, %d axes.",
-            e.gamepad.index,e.gamepad.id,e.gamepad.buttons.length,e.gamepad.axes.length
+            e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, e.gamepad.axes.length
         );
-        setInterval(() => 
-        {
-            var gp = navigator.getGamepads()[e.gamepad.index]
+        setInterval(() => {
+            var gp = navigator.getGamepads()[e.gamepad.index];
             isPressed = gp.buttons[0].pressed;
-            gp.axes.forEach((k, index)=>
-            {
-
-                
-
-
-                if ((k.toFixed(2)>0.2 || k.toFixed(2)<-0.2) && (index == 2|| index==3))
-                {
+            gp.axes.forEach((k, index) => {
+                if ((k.toFixed(2) > 0.2 || k.toFixed(2) < -0.2) && (index == 2 || index == 3)) {
                     console.log(
                         "Gamepad connected at index %d: Button %d was pressed down.",
                         e.gamepad.index,
                         index
                     );
-                    console.log("Value with Fixed Number of Decimal Places:", k.toFixed(2));//aaaaaaaaa
+                    console.log("Value with Fixed Number of Decimal Places:", k.toFixed(2));
                     console.log("Value with Precision:", k.toPrecision(3));
-                    if (gp.axes[2].toFixed(2)<=-0.2 || gp.axes[3].toFixed(2)<=-0.2 || gp.axes[2].toFixed(2)>=0.2 || gp.axes[3].toFixed(2)>=0.2){
-                        let joyconX;
-                        let joyconZ;
-                        if(gp.axes[2].toFixed(2)>=0){
-                            joyconX = "joyX+" + gp.axes[2].toFixed(2);
-                        }else{
-                            joyconX = "joyX" + gp.axes[2].toFixed(2);
-                        }
-                        if(gp.axes[3].toFixed(2)>=0){
-                            joyconZ = "joyZ+" + gp.axes[3].toFixed(2) + joyconX;
-                        }else{
-                            joyconZ = "joyZ" + gp.axes[3].toFixed(2) + joyconX;
-                        }
-                        console.log(joyconX);
-                        console.log(joyconZ);
-                        dataChannel.send(joyconZ);
-                    }
-                    else{
-                        dataChannel.send("joyz+0.0joyX+0.0");
-                    }
-                } 
-            })
+                    let joyconX;
+                    let joyconZ;
+                    if (gp.axes[2].toFixed(2) >= 0) {
+                        joyconX = "joyX+" + Math.abs(gp.axes[2]).toFixed(2);
+                    } else { joyconX = "joyX" + gp.axes[2].toFixed(2); }
 
-            gp.buttons.forEach((k, index) => 
-            {
-                if (k.pressed) 
-                {
-                    console.log(
-                        "Gamepad connected at index %d: Button %d was pressed down.",
-                        e.gamepad.index,
-                        index
-                    );
+                    if (gp.axes[3].toFixed(2) >= 0) {
+                        joyconZ = "joyZ+" + Math.abs(gp.axes[3]).toFixed(2) + joyconX;
+                    } else { joyconZ = "joyZ" + gp.axes[3].toFixed(2) + joyconX; }
+                    console.log(joyconZ);
+                    dataChannel.send(joyconZ);
+                    j = 1;
+                }
+                else {
+                    i = i + 1;
+                    if (i/4 >= 5 && i/4 <= 6) {
+                        console.log(j);
+                        if(j==1){
+                            console.log("joyz+0.0joyX+0.0");
+                            dataChannel.send("joyz+0.0joyX+0.0");
+                            j=0;
+                        }
+                        i = 0;
+                    }
+                }
+            })
+            gp.buttons.forEach((k, index) => {
+                if (k.pressed) {
                     if (dataChannel) {
-                        switch (index) 
-                        {
+                        switch (index) {
                             case 0:
                                 dataChannel.send("control-stop")
                                 break;
@@ -199,24 +190,29 @@ async function makeCall() {
             console.log('Last candidate added');
         }
     };
-    dataChannel = peerConnection.createDataChannel("Robot control");
-    dataChannel.addEventListener("message", (ev) => {
-        console.log(ev.data);
-        if (ev.data == "Reconnect46855") {
-            endCall();
-            init();
-            robotName = robotNameTextBox.value;
-            makeCall();
-            console.log("robot name", robotName);
-            connectButtton.style.backgroundColor = "red";
-            return;
-        }
-    })
     peerConnection.ontrack = function (event) {
         console.log('Received new incoming stream');
         incomingStream = event.streams[0];
         console.log(document.getElementById('incoming-video-stream').srcObject = incomingStream);
     };
+    peerConnection.onicegatheringstatechange = async (event) => {
+        console.log(peerConnection.iceGatheringState, event)
+        console.log("ICE gathering is over")
+    };
+    dataChannel = peerConnection.createDataChannel("Robot control");
+    dataChannel.addEventListener("message", (ev) => {
+        console.log(ev.data);
+        if (ev.data == "Reconnect46855") {
+            endCall();
+            resetInfo();
+            init();
+            console.log(robotName);
+            robotName = robotNameTextBox.value;
+            makeCall();
+            connectButtton.style.backgroundColor = "red";
+            return;
+        }
+    });
 
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
@@ -224,44 +220,36 @@ async function makeCall() {
     ofState.innerHTML = "created";
 
     setTimeout(() => {
-        db.collection(roomName).doc("offer").set({
+        db.collection(robotName).doc("offer").set({
             type: peerConnection.localDescription.type,
-            sdp: peerConnection.localDescription.sdp
+            sdp: peerConnection.localDescription.sdp,
+            password: robotPasswordTextBox.value
         });
         console.log('Offer in db(timeout):', peerConnection.localDescription);
         ofState.innerHTML = "Created and in Database";
     }, 2500);
-    unsubscribe = db.collection(roomName).doc("answer").onSnapshot((doc) => {
+    unsubscribe = db.collection(robotName).doc("answer").onSnapshot((doc) => {
         if (doc.data()) {
             answer = new RTCSessionDescription(doc.data());
             anState.innerHTML = "recieved and added, deleted from db";
-            db.collection(roomName).doc("answer").delete().then(() => 
-            { 
-                console.log("Answer deleted from db") }).catch((error) => 
-            {
+            db.collection(robotName).doc("answer").delete().then(() => {
+                console.log("Answer deleted from db")
+            }).catch((error) => {
                 console.error("Answer not deleted from base: ", error);
             });
             peerConnection.setRemoteDescription(answer);
         }
-
     });
 
     let iceTransport = peerConnection.getReceivers()[0].transport.iceTransport;
     iceTransport.addEventListener("selectedcandidatepairchange", (event) => {
         console.log(iceTransport);
-        /*console.log("old: ", iceTransport.getSelectedCandidatePair());
-        console.log("new: ", event.target.getSelectedCandidatePair());*/
         localState.innerHTML = event.target.getSelectedCandidatePair().local.type;
         remoteState.innerHTML = event.target.getSelectedCandidatePair().remote.type;
     })
 
-    peerConnection.onicegatheringstatechange = async (event) => {
-        console.log(peerConnection.iceGatheringState);
-        console.log(event)
-        console.log("ICE gathering is over")
-    };
 }
-function resetInfo(){
+function resetInfo() {
     ofState.innerHTML = "none";
     anState.innerHTML = "none";
     pcState.innerHTML = "none";
