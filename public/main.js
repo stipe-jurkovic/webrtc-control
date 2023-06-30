@@ -143,8 +143,8 @@ function init() {
                     if (i/4 >= 5 && i/4 <= 6) {
                         console.log(j);
                         if(j==1){
-                            console.log("joyZ+0.0joyX+0.0");
-                            dataChannel.send("joyZ+0.0joyX+0.0");
+                            console.log("joyZ+0.00joyX+0.00");
+                            dataChannel.send("joyZ+0.00joyX+0.00");
                             j=0;
                         }
                         i = 0;
