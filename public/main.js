@@ -32,8 +32,7 @@ document.getElementById("right-control").addEventListener("click", () => {
 document.addEventListener('keydown', (event) => {
     var keyPressed = event.key;
     console.log(keyPressed);
-    if (dataChannel) {
-        dataChannel.send(keyPressed, "message");
+    if (dataChannel && dataChannel.readyState=="open") {
         switch (keyPressed) {
             case 'ArrowUp':
                 console.log(event.key);
@@ -57,7 +56,14 @@ document.addEventListener('keydown', (event) => {
 endCallButton.addEventListener('click', () => {
     endCall()
 });
-connectButtton.addEventListener('click', () => {
+connectButtton.addEventListener('click', ()=>{connect()});
+robotPasswordTextBox.addEventListener('keydown', (e)=>{
+    if(e.key==="Enter"){
+        connect();
+    }
+})
+
+function connect(){
     if (!peerConnection || peerConnection.connectionState != "connected") {
         resetInfo();
         if (robotNameTextBox.value != '' && robotPasswordTextBox.value != '') {
@@ -69,7 +75,7 @@ connectButtton.addEventListener('click', () => {
         }
     }
 
-});
+}
 
 
 /*-------------------------------------------------web rtc ------------------------------------------------------*/
