@@ -34,22 +34,29 @@ document.addEventListener('keydown', (event) => {
     console.log(keyPressed);
     if (dataChannel && dataChannel.readyState=="open") {
         switch (keyPressed) {
+            case "w":
+            case "W":
             case 'ArrowUp':
-                console.log(event.key);
                 dataChannel.send("control-up");
                 break;
+            case "x":
+            case "X":
             case 'ArrowDown':
-                console.log(event.key);
                 dataChannel.send("control-down");
                 break;
+            case "a":
+            case "A":
             case 'ArrowLeft':
-                console.log(event.key);
                 dataChannel.send("control-left");
                 break;
+            case "d":
+            case "D":
             case 'ArrowRight':
-                console.log(event.key);
                 dataChannel.send("control-right");
                 break;
+            case "s":
+            case "S":
+                dataChannel.send("control-stop");
         }
     }
 });
