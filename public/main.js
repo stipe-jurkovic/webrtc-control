@@ -30,6 +30,7 @@ document.getElementById("right-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-right"); }
 })
 document.addEventListener('keydown', (event) => {
+    console.log(peerConnection.getStats())
     var keyPressed = event.key;
     console.log(keyPressed);
     if (dataChannel && dataChannel.readyState=="open") {
@@ -111,14 +112,14 @@ const configuration = {
 
 function init() {
     peerConnection = new RTCPeerConnection(configuration);
-    peerConnection.addEventListener("connectionstatechange", (state) => {
+    /*peerConnection.addEventListener("connectionstatechange", (state) => {
         pcState.innerHTML = state.target.connectionState;
         console.log("connectionState: ", state.target.connectionState);
         if (state.target.connectionState == "connected") {
             connectButtton.style.backgroundColor = "green";
             unsubscribe();
         }
-    });
+    });*/
     window.addEventListener("gamepadconnected", (e) => {
         navigator.getGamepads()[e.gamepad.index]
         let i = 0, j = 0;
@@ -190,6 +191,18 @@ function init() {
         }, 100);
     });
 }
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function heartbeat(){
+    while(true){
+        if (dataChannelRTT && dataChannelRTT.readyState=="open")
+        {
+            dataChannelRTT.send(Date.now());
+        }
+        await sleep(100);
+    };
+}
 
 
 async function makeCall() {
@@ -213,6 +226,7 @@ async function makeCall() {
         console.log("ICE gathering is over")
     };
     dataChannel = peerConnection.createDataChannel("Robot control");
+    dataChannelRTT = peerConnection.createDataChannel("RTT");
     dataChannel.addEventListener("message", (ev) => {
         console.log(ev.data);
         if (ev.data == "Reconnect46855") {
@@ -226,6 +240,22 @@ async function makeCall() {
             return;
         }
     });
+    pcState.innerHTML = 0;
+    i = 0;
+    dataChannelRTT.addEventListener("message", (ev) => {
+        i = i + 1;
+        RTT= Date.now() - ev.data;
+        console.log(RTT);
+        pcState.innerHTML = RTT;
+        /*if(pcState.innerHTML<RTT && i<11){
+        }
+        else{
+            pcState.innerHTML = RTT;
+            i = 0;
+        }*/
+    });
+    heartbeat();
+    
 
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
