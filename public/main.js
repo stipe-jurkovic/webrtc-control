@@ -3,7 +3,7 @@ let peerConnection, db, dataChannel, unsubscribe;
 let stream;
 let incomingStream = new MediaStream();
 let endCallButton = document.getElementById('end-call-button');
-let connectButtton = document.getElementById('connect-button');
+let connectButton = document.getElementById('connect-button');
 let robotNameTextBox = document.getElementById('robot-name');
 let robotPasswordTextBox = document.getElementById('robot-password');
 
@@ -30,10 +30,9 @@ document.getElementById("right-control").addEventListener("click", () => {
     if (dataChannel) { dataChannel.send("control-right"); }
 })
 document.addEventListener('keydown', (event) => {
-    console.log(peerConnection.getStats())
     var keyPressed = event.key;
     console.log(keyPressed);
-    if (dataChannel && dataChannel.readyState=="open") {
+    if (dataChannel && dataChannel.readyState == "open") {
         switch (keyPressed) {
             case "w":
             case "W":
@@ -64,14 +63,14 @@ document.addEventListener('keydown', (event) => {
 endCallButton.addEventListener('click', () => {
     endCall()
 });
-connectButtton.addEventListener('click', ()=>{connect()});
-robotPasswordTextBox.addEventListener('keydown', (e)=>{
-    if(e.key==="Enter"){
+connectButton.addEventListener('click', () => { connect() });
+robotPasswordTextBox.addEventListener('keydown', (e) => {
+    if (e.key === "Enter") {
         connect();
     }
 })
 
-function connect(){
+function connect() {
     if (!peerConnection || peerConnection.connectionState != "connected") {
         resetInfo();
         if (robotNameTextBox.value != '' && robotPasswordTextBox.value != '') {
@@ -79,7 +78,7 @@ function connect(){
             robotName = robotNameTextBox.value;
             makeCall();
             console.log("room name", robotName);
-            connectButtton.style.backgroundColor = "red";
+            connectButton.style.backgroundColor = "red";
         }
     }
 
@@ -112,14 +111,14 @@ const configuration = {
 
 function init() {
     peerConnection = new RTCPeerConnection(configuration);
-    /*peerConnection.addEventListener("connectionstatechange", (state) => {
+    peerConnection.addEventListener("connectionstatechange", (state) => {
         pcState.innerHTML = state.target.connectionState;
         console.log("connectionState: ", state.target.connectionState);
         if (state.target.connectionState == "connected") {
-            connectButtton.style.backgroundColor = "green";
+            connectButton.style.backgroundColor = "green";
             unsubscribe();
         }
-    });*/
+    });
     window.addEventListener("gamepadconnected", (e) => {
         navigator.getGamepads()[e.gamepad.index]
         let i = 0, j = 0;
@@ -154,12 +153,12 @@ function init() {
                 }
                 else {
                     i = i + 1;
-                    if (i/4 >= 5 && i/4 <= 6) {
+                    if (i / 4 >= 5 && i / 4 <= 6) {
                         console.log(j);
-                        if(j==1){
+                        if (j == 1) {
                             console.log("joyZ+0.00joyX+0.00");
                             dataChannel.send("joyZ+0.00joyX+0.00");
-                            j=0;
+                            j = 0;
                         }
                         i = 0;
                     }
@@ -194,14 +193,13 @@ function init() {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-async function heartbeat(){
-    while(true){
-        if (dataChannelRTT && dataChannelRTT.readyState=="open")
-        {
+async function heartbeat() {
+    while (true) {
+        if (dataChannelRTT && dataChannelRTT.readyState == "open") {
             dataChannelRTT.send(Date.now());
         }
-        await sleep(100);
-    };
+        await sleep(1000);
+    }
 }
 
 
@@ -217,7 +215,7 @@ async function makeCall() {
         }
     };
     peerConnection.ontrack = function (event) {
-        console.log('Received new incoming stream');
+        console.log('Received new incoming stream', event);
         incomingStream = event.streams[0];
         console.log(document.getElementById('incoming-video-stream').srcObject = incomingStream);
     };
@@ -232,30 +230,24 @@ async function makeCall() {
         if (ev.data == "Reconnect46855") {
             endCall();
             resetInfo();
+            sleep(200);
             init();
             console.log(robotName);
             robotName = robotNameTextBox.value;
             makeCall();
-            connectButtton.style.backgroundColor = "red";
+            connectButton.style.backgroundColor = "red";
             return;
         }
     });
     pcState.innerHTML = 0;
-    i = 0;
+    var i = 0;
     dataChannelRTT.addEventListener("message", (ev) => {
-        i = i + 1;
-        RTT= Date.now() - ev.data;
+        RTT = Date.now() - ev.data;
         console.log(RTT);
-        pcState.innerHTML = RTT;
-        /*if(pcState.innerHTML<RTT && i<11){
-        }
-        else{
-            pcState.innerHTML = RTT;
-            i = 0;
-        }*/
+        pcState.innerHTML = RTT/2;
     });
     heartbeat();
-    
+
 
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
@@ -298,11 +290,11 @@ function resetInfo() {
     pcState.innerHTML = "none";
     localState.innerHTML = "none";
     remoteState.innerHTML = "none";
-    connectButtton.style.backgroundColor = "white";
+    connectButton.style.backgroundColor = "white";
     peerConnection = null;
 }
 function endCall() {
-    if (peerConnection != "closed") {
+    if (peerConnection.connectionState != "closed") {
         if (dataChannel && dataChannel.readyState == "open") {
             dataChannel.send("endcall123455", "test");
         }
