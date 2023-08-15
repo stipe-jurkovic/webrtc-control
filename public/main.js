@@ -7,6 +7,7 @@ let connectButton = document.getElementById('connect-button');
 let robotNameTextBox = document.getElementById('robot-name');
 let robotPasswordTextBox = document.getElementById('robot-password');
 
+let RTTState = document.getElementById("RTT-state");
 let pcState = document.getElementById("pc-state");
 let ofState = document.getElementById("of-state");
 let anState = document.getElementById("an-state");
@@ -239,12 +240,11 @@ async function makeCall() {
             return;
         }
     });
-    pcState.innerHTML = 0;
-    var i = 0;
+    
     dataChannelRTT.addEventListener("message", (ev) => {
         RTT = Date.now() - ev.data;
         console.log(RTT);
-        pcState.innerHTML = RTT/2;
+        RTTState.innerHTML = RTT;
     });
     heartbeat();
 
@@ -285,6 +285,7 @@ async function makeCall() {
 
 }
 function resetInfo() {
+    RTTState.innerHTML = "none";
     ofState.innerHTML = "none";
     anState.innerHTML = "none";
     pcState.innerHTML = "none";
@@ -296,7 +297,7 @@ function resetInfo() {
 function endCall() {
     if (peerConnection.connectionState != "closed") {
         if (dataChannel && dataChannel.readyState == "open") {
-            dataChannel.send("endcall123455", "test");
+            dataChannel.send("endcall123455");
         }
         peerConnection.close();
         pcState.innerHTML = peerConnection.connectionState;

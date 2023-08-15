@@ -71,6 +71,7 @@ body{
 }
 #video-feed-wrapper{
     position: relative;
+    margin: 1px;
 }
 .video-streams{
     display: block;
@@ -120,6 +121,7 @@ body{
     display: flex;
     align-items: center;
     flex-direction: column;
+    min-width: 30vw;
 }
 
 #connect{
@@ -161,5 +163,8 @@ body{
     #content-wrapper{
         flex-direction: column;
         align-items: center;
+    }
+    #webRTC{
+        width: auto;
     }
 }
