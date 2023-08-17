@@ -14,49 +14,51 @@ let anState = document.getElementById("an-state");
 let localState = document.getElementById("local-state");
 let remoteState = document.getElementById("remote-state");
 
-
-document.getElementById("up-control").addEventListener("click", () => {
-    if (dataChannel) { dataChannel.send("control-up"); }
-})
-document.getElementById("down-control").addEventListener("click", () => {
-    if (dataChannel) { dataChannel.send("control-down"); }
-})
-document.getElementById("stop-control").addEventListener("click", () => {
-    if (dataChannel) { dataChannel.send("control-stop"); }
-})
-document.getElementById("left-control").addEventListener("click", () => {
-    if (dataChannel) { dataChannel.send("control-left"); }
-})
-document.getElementById("right-control").addEventListener("click", () => {
-    if (dataChannel) { dataChannel.send("control-right"); }
+Array.from(document.getElementsByClassName("control-button")).forEach((button) => {
+    button.addEventListener("click", () => {
+        id = button.id;
+        switch (id) {
+            case "up-control":
+                control = "control-up";
+                break;
+            case "down-control":
+                control = "control-down";
+                break;
+            case "stop-control":
+                control = "control-stop";
+                break;
+            case "left-control":
+                control = "control-left";
+                break;
+            case "right-control":
+                control = "control-right";
+                break;
+        }
+        if (dataChannel) { dataChannel.send(control); }
+    })
 })
 document.addEventListener('keydown', (event) => {
-    var keyPressed = event.key;
+    var keyPressed = event.key.toLowerCase();
     console.log(keyPressed);
     if (dataChannel && dataChannel.readyState == "open") {
         switch (keyPressed) {
             case "w":
-            case "W":
-            case 'ArrowUp':
+            case 'arrowup':
                 dataChannel.send("control-up");
                 break;
             case "x":
-            case "X":
-            case 'ArrowDown':
+            case 'arrowdown':
                 dataChannel.send("control-down");
                 break;
             case "a":
-            case "A":
-            case 'ArrowLeft':
+            case 'arrowleft':
                 dataChannel.send("control-left");
                 break;
             case "d":
-            case "D":
-            case 'ArrowRight':
+            case 'arrowright':
                 dataChannel.send("control-right");
                 break;
             case "s":
-            case "S":
                 dataChannel.send("control-stop");
         }
     }
@@ -79,14 +81,13 @@ function connect() {
             robotName = robotNameTextBox.value;
             makeCall();
             console.log("room name", robotName);
-            connectButton.style.backgroundColor = "red";
+            connectButton.style.backgroundColor = "mediumturquoise";
+            
         }
     }
 
 }
 
-
-/*-------------------------------------------------web rtc ------------------------------------------------------*/
 const firebaseConfig = {
     apiKey: "AIzaSyBHz1Ko1En0b3gknSk82e_EAuqRHGs6SSs",
     authDomain: "webrtc-for-robot.firebaseapp.com",
@@ -119,72 +120,64 @@ function init() {
             connectButton.style.backgroundColor = "green";
             unsubscribe();
         }
+        else if (state.target.connectionState == "new" || state.target.connectionState == "connecting"){
+            connectButton.style.backgroundColor = "light blue";
+        }
+        else if (state.target.connectionState == "disconnected"){
+            connectButton.style.backgroundColor = "red";
+        }
+        else if (state.target.connectionState == "closed" || state.target.connectionState == "failed"){
+            connectButton.style.backgroundColor = "";
+        }
     });
     window.addEventListener("gamepadconnected", (e) => {
         navigator.getGamepads()[e.gamepad.index]
         let i = 0, j = 0;
         console.log(
-            "Gamepad connected at index %d: %s. %d buttons, %d axes.",
-            e.gamepad.index, e.gamepad.id, e.gamepad.buttons.length, e.gamepad.axes.length
+            "Gamepad connected at index %d: %s.",
+            e.gamepad.index, e.gamepad.id
         );
         setInterval(() => {
             var gp = navigator.getGamepads()[e.gamepad.index];
-            isPressed = gp.buttons[0].pressed;
             gp.axes.forEach((k, index) => {
                 if ((k.toFixed(2) > 0.2 || k.toFixed(2) < -0.2) && (index == 2 || index == 3)) {
-                    console.log(
-                        "Gamepad connected at index %d: Button %d was pressed down.",
-                        e.gamepad.index,
-                        index
-                    );
-                    console.log("Value with Fixed Number of Decimal Places:", k.toFixed(2));
-                    console.log("Value with Precision:", k.toPrecision(3));
+                    //console.log("Value with Fixed Number of Decimal Places:", k.toFixed(2));
+                    //console.log("Value with Precision:", k.toPrecision(3));
+
                     let joyconX;
                     let joyconZ;
-                    if (gp.axes[2].toFixed(2) >= 0) {
-                        joyconX = "joyX+" + Math.abs(gp.axes[2]).toFixed(2);
-                    } else { joyconX = "joyX" + gp.axes[2].toFixed(2); }
-
-                    if (gp.axes[3].toFixed(2) >= 0) {
-                        joyconZ = "joyZ+" + Math.abs(gp.axes[3]).toFixed(2) + joyconX;
-                    } else { joyconZ = "joyZ" + gp.axes[3].toFixed(2) + joyconX; }
+                    joyconX = "joyX" + (gp.axes[2] >= 0 ? "+" : "-") + Math.abs(gp.axes[2]).toFixed(2);
+                    joyconZ = "joyZ" + (gp.axes[3] >= 0 ? "+" : "-") + Math.abs(gp.axes[3]).toFixed(2) + joyconX;
                     console.log(joyconZ);
                     dataChannel.send(joyconZ);
                     j = 1;
                 }
                 else {
-                    i = i + 1;
-                    if (i / 4 >= 5 && i / 4 <= 6) {
-                        console.log(j);
-                        if (j == 1) {
-                            console.log("joyZ+0.00joyX+0.00");
-                            dataChannel.send("joyZ+0.00joyX+0.00");
-                            j = 0;
-                        }
-                        i = 0;
+                    if (j == 1) {
+                        console.log("joyZ+0.00joyX+0.00");
+                        dataChannel.send("joyZ+0.00joyX+0.00");
+                        j = 0;
                     }
                 }
             })
             gp.buttons.forEach((k, index) => {
-                if (k.pressed) {
-                    if (dataChannel) {
-                        switch (index) {
-                            case 0:
-                                dataChannel.send("control-stop")
-                                break;
-                            case 12:
-                                dataChannel.send("control-up");
-                                break;
-                            case 13:
-                                dataChannel.send("control-down");
-                                break;
-                            case 14:
-                                dataChannel.send("control-left");
-                                break;
-                            case 15:
-                                dataChannel.send("control-right");
-                                break;
-                        }
+                if (k.pressed && dataChannel && dataChannel.readyState == "open") {
+                    switch (index) {
+                        case 0:
+                            dataChannel.send("control-stop");
+                            break;
+                        case 12:
+                            dataChannel.send("control-up");
+                            break;
+                        case 13:
+                            dataChannel.send("control-down");
+                            break;
+                        case 14:
+                            dataChannel.send("control-left");
+                            break;
+                        case 15:
+                            dataChannel.send("control-right");
+                            break;
                     }
                 }
             })
@@ -194,6 +187,7 @@ function init() {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+// Kod koji se izvršava na upravljaču
 async function heartbeat() {
     while (true) {
         if (dataChannelRTT && dataChannelRTT.readyState == "open") {
@@ -240,7 +234,7 @@ async function makeCall() {
             return;
         }
     });
-    
+
     dataChannelRTT.addEventListener("message", (ev) => {
         RTT = Date.now() - ev.data;
         console.log(RTT);
@@ -291,7 +285,7 @@ function resetInfo() {
     pcState.innerHTML = "none";
     localState.innerHTML = "none";
     remoteState.innerHTML = "none";
-    connectButton.style.backgroundColor = "white";
+    connectButton.style.backgroundColor = "";
     peerConnection = null;
 }
 function endCall() {
