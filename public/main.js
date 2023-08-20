@@ -187,7 +187,7 @@ function init() {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-// Kod koji se izvršava na upravljaču
+
 async function heartbeat() {
     while (true) {
         if (dataChannelRTT && dataChannelRTT.readyState == "open") {
