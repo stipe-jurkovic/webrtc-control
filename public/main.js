@@ -6,13 +6,19 @@ let endCallButton = document.getElementById('end-call-button');
 let connectButton = document.getElementById('connect-button');
 let robotNameTextBox = document.getElementById('robot-name');
 let robotPasswordTextBox = document.getElementById('robot-password');
+let selectRes = document.getElementById("resolution-select");
+let selectCodec = document.getElementById("codec-select");
+let chosenRes = null;
+let chosenCodec = null;
 
 let RTTState = document.getElementById("RTT-state");
+let codecelement = document.getElementById("codec");
 let pcState = document.getElementById("pc-state");
 let ofState = document.getElementById("of-state");
 let anState = document.getElementById("an-state");
 let localState = document.getElementById("local-state");
 let remoteState = document.getElementById("remote-state");
+let allStates = document.getElementsByClassName("state-value");
 
 Array.from(document.getElementsByClassName("control-button")).forEach((button) => {
     button.addEventListener("click", () => {
@@ -72,6 +78,32 @@ robotPasswordTextBox.addEventListener('keydown', (e) => {
         connect();
     }
 })
+function getSelects(){
+    switch (selectRes.value){
+        case "160x120":
+            chosenRes = "160x120";
+            break;
+        case "320x240":
+            chosenRes = "320x240";
+            break;
+        case "640x480":
+            chosenRes = "640x480";
+            break;
+        case "":
+            return false; 
+    }
+    switch (selectCodec.value){
+        case "video/H264":
+            chosenCodec = "video/H264";
+            break;
+        case "video/VP8":
+            chosenCodec = "video/VP8";
+            break;
+        case "":
+            return false; 
+    }
+    return true;
+}
 
 function connect() {
     if (!peerConnection || peerConnection.connectionState != "connected") {
@@ -79,13 +111,12 @@ function connect() {
         if (robotNameTextBox.value != '' && robotPasswordTextBox.value != '') {
             init();
             robotName = robotNameTextBox.value;
+            console.log(getSelects());
             makeCall();
             console.log("room name", robotName);
             connectButton.style.backgroundColor = "mediumturquoise";
-            
         }
     }
-
 }
 
 const firebaseConfig = {
@@ -120,13 +151,13 @@ function init() {
             connectButton.style.backgroundColor = "green";
             unsubscribe();
         }
-        else if (state.target.connectionState == "new" || state.target.connectionState == "connecting"){
+        else if (state.target.connectionState == "new" || state.target.connectionState == "connecting") {
             connectButton.style.backgroundColor = "light blue";
         }
-        else if (state.target.connectionState == "disconnected"){
+        else if (state.target.connectionState == "disconnected") {
             connectButton.style.backgroundColor = "red";
         }
-        else if (state.target.connectionState == "closed" || state.target.connectionState == "failed"){
+        else if (state.target.connectionState == "closed" || state.target.connectionState == "failed") {
             connectButton.style.backgroundColor = "";
         }
     });
@@ -196,6 +227,25 @@ async function heartbeat() {
         await sleep(1000);
     }
 }
+async function codecCheck() {
+    let i = 0;
+    while (i <= 10) {
+        if (peerConnection && peerConnection.connectionState == "connected") {
+            peerConnection.getStats()
+                .then(stats => {
+                    stats.forEach(report => {
+                        if (report.type == "codec") {
+                            console.log(report);
+                            console.log("mimeType", report.mimeType);
+                            codecelement.innerHTML = report.mimeType;
+                        };
+                    });
+                });
+        }
+        await sleep(5000);
+        i = i + 1;
+    }
+}
 
 
 async function makeCall() {
@@ -241,7 +291,7 @@ async function makeCall() {
         RTTState.innerHTML = RTT;
     });
     heartbeat();
-
+    codecCheck();
 
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
@@ -252,7 +302,9 @@ async function makeCall() {
         db.collection(robotName).doc("offer").set({
             type: peerConnection.localDescription.type,
             sdp: peerConnection.localDescription.sdp,
-            password: robotPasswordTextBox.value
+            password: robotPasswordTextBox.value,
+            resolution : chosenRes,
+            codec: chosenCodec
         });
         console.log('Offer in db(timeout):', peerConnection.localDescription);
         ofState.innerHTML = "Created and in Database";
@@ -279,12 +331,9 @@ async function makeCall() {
 
 }
 function resetInfo() {
-    RTTState.innerHTML = "none";
-    ofState.innerHTML = "none";
-    anState.innerHTML = "none";
-    pcState.innerHTML = "none";
-    localState.innerHTML = "none";
-    remoteState.innerHTML = "none";
+    Array.from(allStates).forEach((element) => {
+        element.innerHTML = "none";
+    })
     connectButton.style.backgroundColor = "";
     peerConnection = null;
 }

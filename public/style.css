@@ -133,10 +133,12 @@ body{
     align-items: center;
     justify-content: start;
     flex-direction: column;
-    width: fit-content;
 }
 #connect-button{
     margin: 0.15rem;
+    margin-top: 0.7rem;
+    width: 50%;
+    height: 1.5rem;
 }
 .inputs{
     height: 1.5rem;
