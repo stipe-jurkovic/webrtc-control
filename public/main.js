@@ -90,7 +90,8 @@ function getSelects(){
             chosenRes = "640x480";
             break;
         case "":
-            return false; 
+            chosenRes = "160x120";
+            break;
     }
     switch (selectCodec.value){
         case "video/H264":
@@ -100,7 +101,8 @@ function getSelects(){
             chosenCodec = "video/VP8";
             break;
         case "":
-            return false; 
+            chosenCodec = "video/VP8";
+            break;
     }
     return true;
 }
