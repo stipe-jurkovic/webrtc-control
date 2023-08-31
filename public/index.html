@@ -41,22 +41,26 @@
         <div id="control-wrapper">
             <div id="webRTC">
                 <div id="connect">
-                        <input type="text" class="inputs" id="robot-name" name=""
-                            placeholder="Input robot name"></input>
-                        <input type="password" class="inputs" id="robot-password" name=""
-                            placeholder="Input password"></input>
-                            <select class="inputs" name="Resolution" id="resolution-select">
-                                <option value="">&nbsp;Select resolution&nbsp;</option>
-                                <option value="160x120">160x120</option>
-                                <option value="320x240">320x240</option>
-                                <option value="640x480">640x480</option>
-                            </select>
-                            <select class="inputs" name="Codec" id="codec-select">
-                                <option value="">&nbsp;Select codec&nbsp;</option>
-                                <option value="video/H264">video/H264</option>
-                                <option value="video/VP8">video/VP8</option>
-                            </select>
-                            <button id="connect-button">Connect</button>
+                    <input type="text" class="inputs" id="robot-name" name="" placeholder="Input robot name"></input>
+                    <input type="password" class="inputs" id="robot-password" name=""
+                        placeholder="Input password"></input>
+                    <select class="inputs" name="Resolution" id="resolution-select">
+                        <option value="">&nbsp;Select resolution&nbsp;</option>
+                        <option value="160x120">160x120</option>
+                        <option value="176x144">176x144</option>
+                        <option value="320x240">320x240</option>
+                        <option value="640x480">640x480</option>
+                    </select>
+                    <select class="inputs" name="Codec" id="codec-select">
+                        <option value="">&nbsp;Select codec&nbsp;</option>
+                        <option value="video/H264">video/H264</option>
+                        <option value="video/VP8">video/VP8</option>
+                    </select>
+                    <div id="log-checkbox-wrap">
+                        <input type="checkbox" id="log-checkbox" name="log-checkbox">
+                        <label for="log-checkbox">Log RTT</label>
+                    </div>
+                    <button id="connect-button">Connect</button>
                 </div>
                 <div id="up-control" class="control-button"><button>up(w)</button></div>
                 <div id="bottom-buttons">
@@ -71,6 +75,15 @@
                         <h3 class="state state-value" id="RTT-state">none</h3>
                         <h3 class="state">Codec:&nbsp;</h3>
                         <h3 class="state state-value" id="codec">none</h3>
+                    </div>
+                    <div class="states">
+                        <h3 class="state">RTT (<div style="display: contents;" id="avg-interval-number">X</div> s
+                            average):&nbsp; </h3>
+                        <h3 class="state state-value" id="RTT-avg-state">none</h3>
+                    </div>
+                    <div class="states">
+                        <h3 class="state">RTT (total average):&nbsp; </h3>
+                        <h3 class="state state-value" id="RTT-avg-total-state">none</h3>
                     </div>
                     <div class="states">
                         <h3 class="state">Peer connection state:&nbsp; </h3>

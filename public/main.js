@@ -8,10 +8,15 @@ let robotNameTextBox = document.getElementById('robot-name');
 let robotPasswordTextBox = document.getElementById('robot-password');
 let selectRes = document.getElementById("resolution-select");
 let selectCodec = document.getElementById("codec-select");
-let chosenRes = null;
-let chosenCodec = null;
-
+let chosenRes = "";
+let chosenCodec = "";
+let rttLog = "";
+let filename = "";
+let logCheckbox = document.getElementById("log-checkbox");
+let avgIntervalNumber = document.getElementById("avg-interval-number");
 let RTTState = document.getElementById("RTT-state");
+let RTTavgState = document.getElementById("RTT-avg-state");
+let RTTavgTotalState = document.getElementById("RTT-avg-total-state");
 let codecelement = document.getElementById("codec");
 let pcState = document.getElementById("pc-state");
 let ofState = document.getElementById("of-state");
@@ -19,6 +24,65 @@ let anState = document.getElementById("an-state");
 let localState = document.getElementById("local-state");
 let remoteState = document.getElementById("remote-state");
 let allStates = document.getElementsByClassName("state-value");
+
+class RollingAverage {
+    constructor(size) {
+        this.size = size;
+        this.values = [];
+        this.totalSum = 0;
+        this.totalCount = 0;
+    }
+
+    addValue(value) {
+        if (this.values.length >= this.size) {
+            this.values.shift();
+        }
+        this.values.push(value);
+        this.totalSum += value;
+        this.totalCount++;
+    }
+
+    getRollingAverage() {
+        if (this.values.length === 0) return 0;
+
+        const sum = this.values.reduce((acc, val) => acc + val, 0);
+        return sum / this.values.length;
+    }
+    getTotalAverage() {
+        if (this.totalCount === 0) return 0;
+
+        return this.totalSum / this.totalCount;
+    }
+}
+function getCurrentDateTime(choice) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+
+    if (choice == "full") {
+        return `${year}.${month}.${day}_${hours}_${minutes}_${seconds}`;
+    }
+    else if (choice = "time") {
+        return `${hours}:${minutes}:${seconds}.${milliseconds}`
+    }
+}
+function createLogFile(logContent) {
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
 
 Array.from(document.getElementsByClassName("control-button")).forEach((button) => {
     button.addEventListener("click", () => {
@@ -78,10 +142,13 @@ robotPasswordTextBox.addEventListener('keydown', (e) => {
         connect();
     }
 })
-function getSelects(){
-    switch (selectRes.value){
+function getSelects() {
+    switch (selectRes.value) {
         case "160x120":
             chosenRes = "160x120";
+            break;
+        case "176x144":
+            chosenRes = "176x144";
             break;
         case "320x240":
             chosenRes = "320x240";
@@ -93,7 +160,7 @@ function getSelects(){
             chosenRes = "160x120";
             break;
     }
-    switch (selectCodec.value){
+    switch (selectCodec.value) {
         case "video/H264":
             chosenCodec = "video/H264";
             break;
@@ -151,7 +218,6 @@ function init() {
         console.log("connectionState: ", state.target.connectionState);
         if (state.target.connectionState == "connected") {
             connectButton.style.backgroundColor = "green";
-            unsubscribe();
         }
         else if (state.target.connectionState == "new" || state.target.connectionState == "connecting") {
             connectButton.style.backgroundColor = "light blue";
@@ -222,6 +288,31 @@ function sleep(ms) {
 }
 
 async function heartbeat() {
+    const avgSize = 10;
+    const avgRTT = new RollingAverage(avgSize);
+    avgIntervalNumber.innerHTML = avgSize;
+    if (logCheckbox.checked == true) {
+        filename = `Log_RTT_${getCurrentDateTime("full")}.txt`;
+        console.log(filename);
+        rttLog = "----------Log of RTT values----------\n" +
+            "Chosen resolution: " + chosenRes + "\n" +
+            "Chosen codec: " + chosenCodec + "\n\n";
+    }
+
+    dataChannelRTT.addEventListener("message", (ev) => {
+        RTT = Date.now() - ev.data;
+        avgRTT.addValue(RTT);
+        rttlogtemp = "RTT: " + RTT +
+            "\nRTT(" + avgSize + " s average): " + avgRTT.getRollingAverage().toFixed(2)
+            + "\nRTT(total average): " + avgRTT.getTotalAverage().toFixed(2) + "\n";
+        console.log(rttlogtemp);
+        RTTState.innerHTML = RTT;
+        RTTavgState.innerHTML = avgRTT.getRollingAverage().toFixed(2);
+        RTTavgTotalState.innerHTML = avgRTT.getTotalAverage().toFixed(2);
+        if (logCheckbox.checked == true) {
+            rttLog = rttLog + getCurrentDateTime("time") + "\n" + rttlogtemp + "\n";
+        }
+    });
     while (true) {
         if (dataChannelRTT && dataChannelRTT.readyState == "open") {
             dataChannelRTT.send(Date.now());
@@ -237,8 +328,7 @@ async function codecCheck() {
                 .then(stats => {
                     stats.forEach(report => {
                         if (report.type == "codec") {
-                            console.log(report);
-                            console.log("mimeType", report.mimeType);
+                            //    console.log("mimeType", report.mimeType);
                             codecelement.innerHTML = report.mimeType;
                         };
                     });
@@ -287,11 +377,6 @@ async function makeCall() {
         }
     });
 
-    dataChannelRTT.addEventListener("message", (ev) => {
-        RTT = Date.now() - ev.data;
-        console.log(RTT);
-        RTTState.innerHTML = RTT;
-    });
     heartbeat();
     codecCheck();
 
@@ -305,7 +390,7 @@ async function makeCall() {
             type: peerConnection.localDescription.type,
             sdp: peerConnection.localDescription.sdp,
             password: robotPasswordTextBox.value,
-            resolution : chosenRes,
+            resolution: chosenRes,
             codec: chosenCodec
         });
         console.log('Offer in db(timeout):', peerConnection.localDescription);
@@ -321,6 +406,7 @@ async function makeCall() {
                 console.error("Answer not deleted from base: ", error);
             });
             peerConnection.setRemoteDescription(answer);
+            unsubscribe();
         }
     });
 
@@ -347,5 +433,9 @@ function endCall() {
         peerConnection.close();
         pcState.innerHTML = peerConnection.connectionState;
         resetInfo();
+    }
+    if (logCheckbox.checked == true) { 
+        createLogFile(rttLog);
+        rttLog = ""; 
     }
 }
